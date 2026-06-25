@@ -1,0 +1,6 @@
+@Feedback360.Api_HostAddress = http://localhost:5282
+
+GET {{Feedback360.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

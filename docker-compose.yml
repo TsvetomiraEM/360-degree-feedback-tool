@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: feedback360
+      POSTGRES_USER: feedback360
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-feedback360}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feedback360 -d feedback360"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=feedback360;Username=feedback360;Password=${DB_PASSWORD:-feedback360}
+      Jwt__Secret: ${JWT_SECRET:-dev-secret-key-change-in-production-min-32-chars!}
+      Jwt__Issuer: Feedback360
+      Jwt__Audience: Feedback360
+      Google__ClientId: ${GOOGLE_CLIENT_ID:-your-google-client-id}
+      Cors__Origins__0: http://localhost:3000
+      Cors__Origins__1: http://localhost:5173
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/swagger/index.html"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:5000
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-google-client-id}
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
