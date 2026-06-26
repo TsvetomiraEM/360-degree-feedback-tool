@@ -50,6 +50,17 @@ npm install
 npm run dev
 ```
 
+## Running Tests
+
+Backend unit tests use xUnit with EF Core InMemory and enforce ~80% line coverage on Application and Infrastructure service code.
+
+```bash
+cd backend
+dotnet test tests/Feedback360.Application.Tests -p:CollectCoverage=true
+```
+
+This enforces a minimum **80% line coverage** on Application and Infrastructure service code (excluding migrations, seed data, and startup wiring). Coverage reports are written to `backend/tests/Feedback360.Application.Tests/coverage.cobertura.xml`.
+
 ## Seed Accounts
 
 | Email | Password | Role |
