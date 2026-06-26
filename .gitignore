@@ -18,3 +18,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test output
+backend/TestResults/
+backend/tests/**/coverage.cobertura.xml
