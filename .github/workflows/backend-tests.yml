@@ -30,5 +30,8 @@ jobs:
       - name: Restore
         run: dotnet restore Feedback360.sln
 
-      - name: Test with coverage
-        run: dotnet test tests/Feedback360.Application.Tests/Feedback360.Application.Tests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura
+      - name: Test Application layer with coverage
+        run: dotnet test tests/Feedback360.Application.Tests/Feedback360.Application.Tests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura --no-restore
+
+      - name: Test API integration
+        run: dotnet test tests/Feedback360.Api.Tests/Feedback360.Api.Tests.csproj --no-restore

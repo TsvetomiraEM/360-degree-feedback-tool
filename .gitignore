@@ -22,3 +22,5 @@ Thumbs.db
 # Test output
 backend/TestResults/
 backend/tests/**/coverage.cobertura.xml
+e2e/test-results/
+e2e/playwright-report/

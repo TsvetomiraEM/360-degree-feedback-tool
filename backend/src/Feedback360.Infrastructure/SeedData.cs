@@ -22,7 +22,11 @@ public static class SeedData
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
-        await db.Database.MigrateAsync();
+        var env = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+        if (env.EnvironmentName == "Testing")
+            await db.Database.EnsureCreatedAsync();
+        else
+            await db.Database.MigrateAsync();
 
         if (!await db.Users.AnyAsync())
         {
