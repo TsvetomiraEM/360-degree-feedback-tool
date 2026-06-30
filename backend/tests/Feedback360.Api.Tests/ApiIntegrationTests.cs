@@ -186,10 +186,16 @@ public class ApiIntegrationTests : IClassFixture<Feedback360WebApplicationFactor
     }
 
     [Fact]
-    public async Task Health_Returns200()
+    public async Task Health_Returns200_WithoutAuthentication()
     {
-        var response = await _client.GetAsync("/health");
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = null;
+
+        var response = await client.GetAsync("/health");
+
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
     }
 
     private async Task<string> LoginAsync(string email, string password)

@@ -61,6 +61,40 @@ public class ResultsServiceTests : IAsyncLifetime
         result.Series.Should().HaveCount(3);
         result.CommentGroups.Should().NotBeEmpty();
         result.OpenTextGroups.Should().NotBeEmpty();
+        result.CategoryGroups.Should().ContainSingle(g => g.CategoryName == "Skills");
+        result.CategoryGroups[0].Labels.Should().Equal("Teamwork");
+        result.CategoryGroups[0].CommentGroups.Should().NotBeEmpty();
+        result.CategoryGroups[0].OpenTextGroups.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetResultsAsync_CategoryGroups_GroupsMultipleCategories()
+    {
+        _db.QuestionCategories.Add(new QuestionCategory
+        {
+            Id = TestIds.LeadershipCategoryId,
+            Name = "Leadership",
+            CreatedById = TestIds.ManagerId,
+            CreatedAt = DateTime.UtcNow
+        });
+        var leadershipQuestionId = Guid.NewGuid();
+        _db.SurveyQuestions.Add(new SurveyQuestion
+        {
+            Id = leadershipQuestionId,
+            SurveyId = TestIds.SurveyId,
+            Order = 2,
+            Type = QuestionType.Rating,
+            Text = "Inspires others",
+            CategoryId = TestIds.LeadershipCategoryId
+        });
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.GetResultsAsync(TestIds.SurveyId);
+        result.Should().NotBeNull();
+        result!.CategoryGroups.Should().HaveCount(2);
+        result.CategoryGroups[0].CategoryName.Should().Be("Skills");
+        result.CategoryGroups[1].CategoryName.Should().Be("Leadership");
+        result.CategoryGroups[1].Labels.Should().Equal("Inspires others");
     }
 
     [Fact]

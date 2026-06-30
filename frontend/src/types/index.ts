@@ -100,6 +100,27 @@ export interface ResultsSeries {
   data: (number | null)[];
 }
 
+export interface ResultsCommentGroup {
+  reviewerType: string;
+  questionText: string;
+  comments: string[];
+}
+
+export interface ResultsOpenTextGroup {
+  reviewerType: string;
+  questionText: string;
+  responses: string[];
+}
+
+export interface ResultsCategoryGroup {
+  categoryId: string;
+  categoryName: string;
+  labels: string[];
+  series: ResultsSeries[];
+  commentGroups: ResultsCommentGroup[];
+  openTextGroups: ResultsOpenTextGroup[];
+}
+
 export interface Results {
   surveyId: string;
   title: string;
@@ -107,8 +128,9 @@ export interface Results {
   resultsPublished: boolean;
   labels: string[];
   series: ResultsSeries[];
-  commentGroups: { reviewerType: string; questionText: string; comments: string[] }[];
-  openTextGroups: { reviewerType: string; questionText: string; responses: string[] }[];
+  commentGroups: ResultsCommentGroup[];
+  openTextGroups: ResultsOpenTextGroup[];
+  categoryGroups: ResultsCategoryGroup[];
 }
 
 export interface AuditLog {
