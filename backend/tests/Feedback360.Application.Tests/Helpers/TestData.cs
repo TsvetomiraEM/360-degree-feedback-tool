@@ -15,6 +15,7 @@ public static class TestIds
     public static readonly Guid Employee2Id = Guid.Parse("44444444-4444-4444-4444-444444444444");
     public static readonly Guid OtherManagerId = Guid.Parse("55555555-5555-5555-5555-555555555555");
     public static readonly Guid SkillsCategoryId = Guid.Parse("aaaaaaaa-0001-0001-0001-000000000001");
+    public static readonly Guid LeadershipCategoryId = Guid.Parse("aaaaaaaa-0002-0002-0002-000000000002");
     public static readonly Guid TemplateId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
     public static readonly Guid SurveyId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
     public static readonly Guid AssignmentId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
