@@ -17,4 +17,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Feedback360.Application.Tests" />
+  </ItemGroup>
+
 </Project>
