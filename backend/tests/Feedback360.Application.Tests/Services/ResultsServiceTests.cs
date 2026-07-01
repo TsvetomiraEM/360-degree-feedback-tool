@@ -93,6 +93,27 @@ public class ResultsServiceTests : IAsyncLifetime
         result.CategorySummaries[1].CategoryName.Should().Be("Leadership");
     }
 
+    private SurveyAssignment EnsureReviewerAssignment(
+        Survey survey,
+        Guid reviewerId,
+        ReviewerType reviewerType)
+    {
+        var existing = survey.Assignments.FirstOrDefault(a => a.ReviewerType == reviewerType);
+        if (existing != null) return existing;
+
+        var assignment = new SurveyAssignment
+        {
+            Id = Guid.NewGuid(),
+            SurveyId = survey.Id,
+            ReviewerId = reviewerId,
+            ReviewerType = reviewerType,
+            Status = AssignmentStatus.Pending
+        };
+        _db.SurveyAssignments.Add(assignment);
+        survey.Assignments.Add(assignment);
+        return assignment;
+    }
+
     [Fact]
     public async Task GetResultsAsync_ReturnsTopAndBottomQuestions_RankedByPeerManagerAverage()
     {
@@ -135,8 +156,8 @@ public class ResultsServiceTests : IAsyncLifetime
                 CategoryId = categoryId
             });
 
-        var peerAssignment = survey.Assignments.First(a => a.ReviewerType == ReviewerType.Peer);
-        var managerAssignment = survey.Assignments.First(a => a.ReviewerType == ReviewerType.Manager);
+        var peerAssignment = EnsureReviewerAssignment(survey, TestIds.Employee2Id, ReviewerType.Peer);
+        var managerAssignment = EnsureReviewerAssignment(survey, TestIds.ManagerId, ReviewerType.Manager);
         peerAssignment.Status = AssignmentStatus.Completed;
         managerAssignment.Status = AssignmentStatus.Completed;
 
