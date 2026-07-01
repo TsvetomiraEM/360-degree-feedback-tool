@@ -5,14 +5,44 @@ import {
   Chip, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { BarChart } from '@mui/x-charts/BarChart';
 import { api } from '../../api/client';
 import { CategoryRadarChart } from './CategoryRadarChart';
+import { QuestionBarChart } from './QuestionBarChart';
 import { useAuth } from '../../auth/AuthContext';
 import type { Results, ResultsCategoryGroup } from '../../types';
 import {
-  SERIES_COLORS, buildBarChartDataset, formatAverage, summariesForRadar,
+  SERIES_COLORS, buildBarChartDataset, buildHighlightBarDataset, formatAverage, summariesForRadar,
 } from './resultsChartUtils';
+
+const HIGHLIGHT_CHART_SERIES = [
+  { dataKey: 'Peer', label: 'Peer', color: SERIES_COLORS.Peer },
+  { dataKey: 'Manager', label: 'Manager', color: SERIES_COLORS.Manager },
+] as const;
+
+function QuestionHighlightCard({
+  title,
+  questions,
+}: {
+  title: string;
+  questions: Results['topQuestions'];
+}) {
+  if (questions.length === 0) return null;
+
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>{title}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Ranked by average of Peer and Manager scores
+        </Typography>
+        <QuestionBarChart
+          dataset={buildHighlightBarDataset(questions)}
+          series={[...HIGHLIGHT_CHART_SERIES]}
+        />
+      </CardContent>
+    </Card>
+  );
+}
 
 function CategoryComments({ group }: { group: ResultsCategoryGroup }) {
   const hasComments = group.commentGroups.length > 0 || group.openTextGroups.length > 0;
@@ -128,6 +158,20 @@ export function ResultsDetailPage() {
         </Card>
       )}
 
+      {(results.topQuestions.length > 0 || results.bottomQuestions.length > 0) && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: 3,
+            mb: 3,
+          }}
+        >
+          <QuestionHighlightCard title="Top 3 Questions" questions={results.topQuestions} />
+          <QuestionHighlightCard title="Bottom 3 Questions" questions={results.bottomQuestions} />
+        </Box>
+      )}
+
       {results.categoryGroups.map((group) => {
         const chartData = buildBarChartDataset(group);
         return (
@@ -135,16 +179,13 @@ export function ResultsDetailPage() {
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>{group.categoryName}</Typography>
               {group.labels.length > 0 && (
-                <BarChart
+                <QuestionBarChart
                   dataset={chartData}
-                  xAxis={[{ scaleType: 'band', dataKey: 'question' }]}
                   series={[
                     { dataKey: 'Self', label: 'Self', color: SERIES_COLORS.Self },
                     { dataKey: 'Peer', label: 'Peer', color: SERIES_COLORS.Peer },
                     { dataKey: 'Manager', label: 'Manager', color: SERIES_COLORS.Manager },
                   ]}
-                  height={Math.max(250, group.labels.length * 50)}
-                  margin={{ left: 60, bottom: 80 }}
                 />
               )}
               <CategoryComments group={group} />

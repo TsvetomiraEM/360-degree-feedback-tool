@@ -4,6 +4,7 @@ using Feedback360.Domain.Entities;
 using Feedback360.Domain.Enums;
 using Feedback360.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Feedback360.Application.Tests.Services;
 
@@ -90,5 +91,72 @@ public class ResultsServiceTests : IAsyncLifetime
         result!.CategorySummaries.Should().HaveCount(2);
         result.CategoryGroups.Should().HaveCount(2);
         result.CategorySummaries[1].CategoryName.Should().Be("Leadership");
+    }
+
+    [Fact]
+    public async Task GetResultsAsync_ReturnsTopAndBottomQuestions_RankedByPeerManagerAverage()
+    {
+        var survey = await _db.Surveys
+            .Include(s => s.Questions)
+            .Include(s => s.Assignments)
+            .FirstAsync(s => s.Id == TestIds.SurveyId);
+
+        var qHighId = Guid.NewGuid();
+        var qMidId = Guid.NewGuid();
+        var qLowId = Guid.NewGuid();
+        var categoryId = survey.Questions.First().CategoryId;
+
+        _db.SurveyQuestions.AddRange(
+            new SurveyQuestion
+            {
+                Id = qHighId,
+                SurveyId = TestIds.SurveyId,
+                Order = 10,
+                Type = QuestionType.Rating,
+                Text = "High score question",
+                CategoryId = categoryId
+            },
+            new SurveyQuestion
+            {
+                Id = qMidId,
+                SurveyId = TestIds.SurveyId,
+                Order = 11,
+                Type = QuestionType.Rating,
+                Text = "Mid score question",
+                CategoryId = categoryId
+            },
+            new SurveyQuestion
+            {
+                Id = qLowId,
+                SurveyId = TestIds.SurveyId,
+                Order = 12,
+                Type = QuestionType.Rating,
+                Text = "Low score question",
+                CategoryId = categoryId
+            });
+
+        var peerAssignment = survey.Assignments.First(a => a.ReviewerType == ReviewerType.Peer);
+        var managerAssignment = survey.Assignments.First(a => a.ReviewerType == ReviewerType.Manager);
+        peerAssignment.Status = AssignmentStatus.Completed;
+        managerAssignment.Status = AssignmentStatus.Completed;
+
+        _db.Responses.AddRange(
+            new Response { Id = Guid.NewGuid(), AssignmentId = peerAssignment.Id, QuestionId = qHighId, Rating = 5 },
+            new Response { Id = Guid.NewGuid(), AssignmentId = managerAssignment.Id, QuestionId = qHighId, Rating = 5 },
+            new Response { Id = Guid.NewGuid(), AssignmentId = peerAssignment.Id, QuestionId = qMidId, Rating = 3 },
+            new Response { Id = Guid.NewGuid(), AssignmentId = managerAssignment.Id, QuestionId = qMidId, Rating = 3 },
+            new Response { Id = Guid.NewGuid(), AssignmentId = peerAssignment.Id, QuestionId = qLowId, Rating = 1 },
+            new Response { Id = Guid.NewGuid(), AssignmentId = managerAssignment.Id, QuestionId = qLowId, Rating = 1 });
+
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.GetResultsAsync(TestIds.SurveyId);
+        result.Should().NotBeNull();
+        result!.TopQuestions.Should().HaveCount(3);
+        result.BottomQuestions.Should().HaveCount(3);
+        result.TopQuestions[0].QuestionText.Should().Contain("High score question");
+        result.TopQuestions[0].CombinedAverage.Should().Be(5);
+        result.BottomQuestions[0].QuestionText.Should().Contain("Low score question");
+        result.BottomQuestions[0].CombinedAverage.Should().Be(1);
     }
 }

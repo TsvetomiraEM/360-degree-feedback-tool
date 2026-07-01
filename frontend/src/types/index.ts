@@ -130,6 +130,13 @@ export interface ResultsCategoryGroup {
   openTextGroups: ResultsOpenTextGroup[];
 }
 
+export interface ResultsQuestionHighlight {
+  questionText: string;
+  peerAverage: number | null;
+  managerAverage: number | null;
+  combinedAverage: number;
+}
+
 export interface Results {
   surveyId: string;
   title: string;
@@ -141,6 +148,8 @@ export interface Results {
   openTextGroups: ResultsOpenTextGroup[];
   categorySummaries: ResultsCategorySummary[];
   categoryGroups: ResultsCategoryGroup[];
+  topQuestions: ResultsQuestionHighlight[];
+  bottomQuestions: ResultsQuestionHighlight[];
 }
 
 export interface AuditLog {

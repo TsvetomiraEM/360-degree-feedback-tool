@@ -37,8 +37,9 @@ public record QuestionForResponseDto(Guid Id, QuestionType Type, string Text, in
 public record ResponseInput(Guid QuestionId, int? Rating, string? Comment, string? OpenText);
 public record SubmitResponsesRequest(List<ResponseInput> Responses);
 
-public record ResultsDto(Guid SurveyId, string Title, string SubjectEmployeeName, bool ResultsPublished, List<string> Labels, List<ResultsSeriesDto> Series, List<ResultsCommentGroupDto> CommentGroups, List<OpenTextGroupDto> OpenTextGroups, List<ResultsCategorySummaryDto> CategorySummaries, List<ResultsCategoryGroupDto> CategoryGroups);
+public record ResultsDto(Guid SurveyId, string Title, string SubjectEmployeeName, bool ResultsPublished, List<string> Labels, List<ResultsSeriesDto> Series, List<ResultsCommentGroupDto> CommentGroups, List<OpenTextGroupDto> OpenTextGroups, List<ResultsCategorySummaryDto> CategorySummaries, List<ResultsCategoryGroupDto> CategoryGroups, List<ResultsQuestionHighlightDto> TopQuestions, List<ResultsQuestionHighlightDto> BottomQuestions);
 public record ResultsSeriesDto(string Name, List<double?> Data);
+public record ResultsQuestionHighlightDto(string QuestionText, double? PeerAverage, double? ManagerAverage, double CombinedAverage);
 public record ResultsCommentGroupDto(string ReviewerType, string QuestionText, List<string> Comments);
 public record OpenTextGroupDto(string ReviewerType, string QuestionText, List<string> Responses);
 public record ResultsCategorySummaryDto(Guid CategoryId, string CategoryName, double? SelfAverage, double? PeerAverage, double? ManagerAverage, double? OverallAverage);

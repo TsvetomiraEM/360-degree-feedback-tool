@@ -86,9 +86,12 @@ public class ResultsService
             })
             .ToList();
 
+        var (topQuestions, bottomQuestions) = BuildQuestionHighlights(survey, ratingQuestions);
+
         return new ResultsDto(
             survey.Id, survey.Title, survey.SubjectEmployee.Name, survey.ResultsPublished,
-            labels, series, commentGroups, openTextGroups, categorySummaries, categoryGroups);
+            labels, series, commentGroups, openTextGroups, categorySummaries, categoryGroups,
+            topQuestions, bottomQuestions);
     }
 
     public async Task<List<SurveyDto>> GetViewableSurveysAsync(CancellationToken ct = default)
@@ -183,18 +186,59 @@ public class ResultsService
         }).ToList();
     }
 
+    private static (List<ResultsQuestionHighlightDto> Top, List<ResultsQuestionHighlightDto> Bottom) BuildQuestionHighlights(
+        Domain.Entities.Survey survey,
+        List<Domain.Entities.SurveyQuestion> ratingQuestions,
+        int count = 3)
+    {
+        var scored = ratingQuestions
+            .Select(q =>
+            {
+                var peer = ComputeQuestionAverage(survey, q.Id, ReviewerType.Peer);
+                var manager = ComputeQuestionAverage(survey, q.Id, ReviewerType.Manager);
+                var combined = PeerManagerCombined(peer, manager);
+                if (combined is null) return null;
+                return new ResultsQuestionHighlightDto(
+                    $"[{q.Category?.Name ?? "General"}] {q.Text}",
+                    peer,
+                    manager,
+                    combined.Value);
+            })
+            .Where(h => h is not null)
+            .Cast<ResultsQuestionHighlightDto>()
+            .OrderByDescending(h => h.CombinedAverage)
+            .ToList();
+
+        var top = scored.Take(count).ToList();
+        var bottom = scored.TakeLast(count).OrderBy(h => h.CombinedAverage).ToList();
+        return (top, bottom);
+    }
+
+    private static double? PeerManagerCombined(double? peer, double? manager)
+    {
+        if (peer.HasValue && manager.HasValue) return (peer.Value + manager.Value) / 2;
+        if (peer.HasValue) return peer.Value;
+        if (manager.HasValue) return manager.Value;
+        return null;
+    }
+
+    private static double? ComputeQuestionAverage(
+        Domain.Entities.Survey survey,
+        Guid questionId,
+        ReviewerType reviewerType)
+    {
+        var ratings = survey.Assignments
+            .Where(a => a.ReviewerType == reviewerType && a.Status == AssignmentStatus.Completed)
+            .SelectMany(a => a.Responses.Where(r => r.QuestionId == questionId && r.Rating.HasValue))
+            .Select(r => (double)r.Rating!.Value)
+            .ToList();
+
+        return ratings.Count > 0 ? ratings.Average() : null;
+    }
+
     private static ResultsSeriesDto BuildSeries(string name, ReviewerType type, List<Domain.Entities.SurveyQuestion> questions, Domain.Entities.Survey survey)
     {
-        var data = questions.Select(q =>
-        {
-            var ratings = survey.Assignments
-                .Where(a => a.ReviewerType == type && a.Status == AssignmentStatus.Completed)
-                .SelectMany(a => a.Responses.Where(r => r.QuestionId == q.Id && r.Rating.HasValue))
-                .Select(r => (double)r.Rating!.Value)
-                .ToList();
-            return ratings.Count > 0 ? ratings.Average() : (double?)null;
-        }).ToList();
-
+        var data = questions.Select(q => ComputeQuestionAverage(survey, q.Id, type)).ToList();
         return new ResultsSeriesDto(name, data);
     }
 }
