@@ -83,15 +83,19 @@ public class TemplateService
         template.Description = request.Description;
         template.UpdatedAt = DateTime.UtcNow;
         _db.TemplateQuestions.RemoveRange(template.Questions);
-        template.Questions = request.Questions.Select(q => new TemplateQuestion
+
+        foreach (var q in request.Questions)
         {
-            Id = Guid.NewGuid(),
-            TemplateId = template.Id,
-            Order = q.Order,
-            Type = q.Type,
-            Text = q.Text,
-            CategoryId = q.CategoryId
-        }).ToList();
+            _db.TemplateQuestions.Add(new TemplateQuestion
+            {
+                Id = Guid.NewGuid(),
+                TemplateId = template.Id,
+                Order = q.Order,
+                Type = q.Type,
+                Text = q.Text,
+                CategoryId = q.CategoryId
+            });
+        }
 
         await _db.SaveChangesAsync(ct);
         return MapTemplate(await _db.SurveyTemplates.Include(t => t.Questions).ThenInclude(q => q.Category).Include(t => t.CreatedBy).Include(t => t.Shares)
@@ -121,7 +125,7 @@ public class TemplateService
             if (manager is null) continue;
             if (template.Shares.Any(s => s.SharedWithManagerId == managerId)) continue;
 
-            template.Shares.Add(new TemplateShare
+            _db.TemplateShares.Add(new TemplateShare
             {
                 Id = Guid.NewGuid(),
                 TemplateId = id,

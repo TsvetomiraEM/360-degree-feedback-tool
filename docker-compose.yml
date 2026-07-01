@@ -31,7 +31,7 @@ services:
     ports:
       - "5000:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/swagger/index.html"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 5
