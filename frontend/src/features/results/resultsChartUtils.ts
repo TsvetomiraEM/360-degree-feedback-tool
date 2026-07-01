@@ -4,7 +4,7 @@ export const RATING_MAX = 5;
 
 export const SERIES_COLORS = {
   Self: '#0875E1',
-  Peer: '#5E6A75',
+  Peer: '#FF9800',
   Manager: '#2E7D32',
   '360': '#E65100',
 } as const;

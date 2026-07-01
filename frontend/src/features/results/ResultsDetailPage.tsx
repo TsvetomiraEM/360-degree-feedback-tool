@@ -49,7 +49,7 @@ function CategoryComments({ group }: { group: ResultsCategoryGroup }) {
   if (!hasComments) return null;
 
   return (
-    <Box sx={{ mt: 3 }}>
+    <Box sx={{ height: '100%', minWidth: 0, overflow: 'auto' }}>
       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>Comments</Typography>
       {['Self', 'Peer', 'Manager'].map((type) => {
         const commentGroups = group.commentGroups.filter((g) => g.reviewerType === type);
@@ -178,17 +178,28 @@ export function ResultsDetailPage() {
           <Card key={group.categoryId} sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>{group.categoryName}</Typography>
-              {group.labels.length > 0 && (
-                <QuestionBarChart
-                  dataset={chartData}
-                  series={[
-                    { dataKey: 'Self', label: 'Self', color: SERIES_COLORS.Self },
-                    { dataKey: 'Peer', label: 'Peer', color: SERIES_COLORS.Peer },
-                    { dataKey: 'Manager', label: 'Manager', color: SERIES_COLORS.Manager },
-                  ]}
-                />
-              )}
-              <CategoryComments group={group} />
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                  gap: 3,
+                  alignItems: 'start',
+                }}
+              >
+                {group.labels.length > 0 && (
+                  <Box sx={{ minWidth: 0 }}>
+                    <QuestionBarChart
+                      dataset={chartData}
+                      series={[
+                        { dataKey: 'Self', label: 'Self', color: SERIES_COLORS.Self },
+                        { dataKey: 'Peer', label: 'Peer', color: SERIES_COLORS.Peer },
+                        { dataKey: 'Manager', label: 'Manager', color: SERIES_COLORS.Manager },
+                      ]}
+                    />
+                  </Box>
+                )}
+                <CategoryComments group={group} />
+              </Box>
             </CardContent>
           </Card>
         );
