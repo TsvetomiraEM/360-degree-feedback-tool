@@ -6,12 +6,12 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { RadarChart } from '@mui/x-charts/RadarChart';
 import { api } from '../../api/client';
+import { CategoryRadarChart } from './CategoryRadarChart';
 import { useAuth } from '../../auth/AuthContext';
 import type { Results, ResultsCategoryGroup } from '../../types';
 import {
-  RATING_MAX, SERIES_COLORS, buildBarChartDataset, formatAverage, summariesForRadar,
+  SERIES_COLORS, buildBarChartDataset, formatAverage, summariesForRadar,
 } from './resultsChartUtils';
 
 function CategoryComments({ group }: { group: ResultsCategoryGroup }) {
@@ -98,22 +98,7 @@ export function ResultsDetailPage() {
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>Category Overview</Typography>
-            <RadarChart
-              height={400}
-              shape="circular"
-              radar={{ max: RATING_MAX, metrics }}
-              series={radarSeries.map((s) => ({
-                label: s.label,
-                data: s.data,
-                color: s.color,
-                fillArea: true,
-                valueFormatter: (value: number | null, context: { dataIndex: number }) => {
-                  if (value == null || s.nullMask[context.dataIndex]) return 'N/A';
-                  return value.toFixed(1);
-                },
-              }))}
-              margin={{ top: 40, bottom: 40 }}
-            />
+            <CategoryRadarChart metrics={metrics} series={radarSeries} />
 
             <TableContainer component={Paper} variant="outlined" sx={{ mt: 3 }}>
               <Table size="small">

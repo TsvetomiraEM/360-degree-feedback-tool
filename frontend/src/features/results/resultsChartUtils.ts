@@ -9,6 +9,17 @@ export const SERIES_COLORS = {
   '360': '#E65100',
 } as const;
 
+export const RADAR_SERIES_IDS = ['self', 'peer', 'manager', '360'] as const;
+export type RadarSeriesId = (typeof RADAR_SERIES_IDS)[number];
+
+export type RadarSeriesSummary = {
+  id: RadarSeriesId;
+  label: string;
+  color: string;
+  data: number[];
+  nullMask: boolean[];
+};
+
 export function formatAverage(value: number | null | undefined): string {
   if (value == null) return '—';
   return value.toFixed(1);
@@ -36,26 +47,30 @@ export function summariesForRadar(summaries: ResultsCategorySummary[]) {
     overall: rated.map((s) => s.overallAverage == null),
   };
 
-  const series = [
+  const series: RadarSeriesSummary[] = [
     {
+      id: 'self',
       label: 'Self',
       color: SERIES_COLORS.Self,
       data: rated.map((s) => s.selfAverage ?? 0),
       nullMask: nullMask.self,
     },
     {
+      id: 'peer',
       label: 'Peer',
       color: SERIES_COLORS.Peer,
       data: rated.map((s) => s.peerAverage ?? 0),
       nullMask: nullMask.peer,
     },
     {
+      id: 'manager',
       label: 'Manager',
       color: SERIES_COLORS.Manager,
       data: rated.map((s) => s.managerAverage ?? 0),
       nullMask: nullMask.manager,
     },
     {
+      id: '360',
       label: '360',
       color: SERIES_COLORS['360'],
       data: rated.map((s) => s.overallAverage ?? 0),
