@@ -41,35 +41,54 @@ public class ResultsService
             BuildSeries("Manager", ReviewerType.Manager, ratingQuestions, survey)
         };
 
-        var commentGroups = ratingQuestions.SelectMany(q =>
-        {
-            return Enum.GetValues<ReviewerType>().Select(rt => new ResultsCommentGroupDto(
-                rt.ToString(),
-                $"[{q.Category?.Name ?? "General"}] {q.Text}",
-                survey.Assignments
-                    .Where(a => a.ReviewerType == rt && a.Status == AssignmentStatus.Completed)
-                    .SelectMany(a => a.Responses.Where(r => r.QuestionId == q.Id && !string.IsNullOrWhiteSpace(r.Comment)))
-                    .Select(r => r.Comment!)
-                    .ToList()
-            )).Where(g => g.Comments.Count > 0);
-        }).ToList();
+        var commentGroups = BuildCommentGroups(ratingQuestions, survey, includeCategoryPrefix: true);
+        var openTextGroups = BuildOpenTextGroups(openTextQuestions, survey, includeCategoryPrefix: true);
 
-        var openTextGroups = openTextQuestions.SelectMany(q =>
-        {
-            return Enum.GetValues<ReviewerType>().Select(rt => new OpenTextGroupDto(
-                rt.ToString(),
-                $"[{q.Category?.Name ?? "General"}] {q.Text}",
-                survey.Assignments
-                    .Where(a => a.ReviewerType == rt && a.Status == AssignmentStatus.Completed)
-                    .SelectMany(a => a.Responses.Where(r => r.QuestionId == q.Id && !string.IsNullOrWhiteSpace(r.OpenText)))
-                    .Select(r => r.OpenText!)
-                    .ToList()
-            )).Where(g => g.Responses.Count > 0);
-        }).ToList();
+        var categoryGroups = survey.Questions
+            .GroupBy(q => q.CategoryId)
+            .OrderBy(g => g.Min(q => q.Order))
+            .Select(g =>
+            {
+                var categoryName = g.First().Category?.Name ?? "General";
+                var categoryRating = g.Where(q => q.Type == QuestionType.Rating).OrderBy(q => q.Order).ToList();
+                var categoryOpenText = g.Where(q => q.Type == QuestionType.OpenText).OrderBy(q => q.Order).ToList();
+                var categoryLabels = categoryRating.Select(q => q.Text).ToList();
+                var categorySeries = new List<ResultsSeriesDto>
+                {
+                    BuildSeries("Self", ReviewerType.Self, categoryRating, survey),
+                    BuildSeries("Peer", ReviewerType.Peer, categoryRating, survey),
+                    BuildSeries("Manager", ReviewerType.Manager, categoryRating, survey)
+                };
+                return new ResultsCategoryGroupDto(
+                    g.Key,
+                    categoryName,
+                    categoryLabels,
+                    categorySeries,
+                    BuildCommentGroups(categoryRating, survey),
+                    BuildOpenTextGroups(categoryOpenText, survey));
+            })
+            .ToList();
+
+        var categorySummaries = survey.Questions
+            .GroupBy(q => q.CategoryId)
+            .OrderBy(g => g.Min(q => q.Order))
+            .Select(g =>
+            {
+                var categoryName = g.First().Category?.Name ?? "General";
+                var ratingQuestionIds = g.Where(q => q.Type == QuestionType.Rating).Select(q => q.Id).ToHashSet();
+                return new ResultsCategorySummaryDto(
+                    g.Key,
+                    categoryName,
+                    ComputeCategoryAverage(survey, ratingQuestionIds, ReviewerType.Self),
+                    ComputeCategoryAverage(survey, ratingQuestionIds, ReviewerType.Peer),
+                    ComputeCategoryAverage(survey, ratingQuestionIds, ReviewerType.Manager),
+                    ComputeCategoryAverage(survey, ratingQuestionIds, null));
+            })
+            .ToList();
 
         return new ResultsDto(
             survey.Id, survey.Title, survey.SubjectEmployee.Name, survey.ResultsPublished,
-            labels, series, commentGroups, openTextGroups);
+            labels, series, commentGroups, openTextGroups, categorySummaries, categoryGroups);
     }
 
     public async Task<List<SurveyDto>> GetViewableSurveysAsync(CancellationToken ct = default)
@@ -102,6 +121,66 @@ public class ResultsService
             return survey.SubjectEmployeeId == _currentUser.UserId && survey.ResultsPublished;
 
         return false;
+    }
+
+    private static double? ComputeCategoryAverage(
+        Domain.Entities.Survey survey,
+        HashSet<Guid> ratingQuestionIds,
+        ReviewerType? reviewerType)
+    {
+        if (ratingQuestionIds.Count == 0) return null;
+
+        var ratings = survey.Assignments
+            .Where(a => a.Status == AssignmentStatus.Completed && (reviewerType is null || a.ReviewerType == reviewerType))
+            .SelectMany(a => a.Responses.Where(r => ratingQuestionIds.Contains(r.QuestionId) && r.Rating.HasValue))
+            .Select(r => (double)r.Rating!.Value)
+            .ToList();
+
+        return ratings.Count > 0 ? ratings.Average() : null;
+    }
+
+    private static List<ResultsCommentGroupDto> BuildCommentGroups(
+        List<Domain.Entities.SurveyQuestion> questions,
+        Domain.Entities.Survey survey,
+        bool includeCategoryPrefix = false)
+    {
+        return questions.SelectMany(q =>
+        {
+            var questionText = includeCategoryPrefix
+                ? $"[{q.Category?.Name ?? "General"}] {q.Text}"
+                : q.Text;
+            return Enum.GetValues<ReviewerType>().Select(rt => new ResultsCommentGroupDto(
+                rt.ToString(),
+                questionText,
+                survey.Assignments
+                    .Where(a => a.ReviewerType == rt && a.Status == AssignmentStatus.Completed)
+                    .SelectMany(a => a.Responses.Where(r => r.QuestionId == q.Id && !string.IsNullOrWhiteSpace(r.Comment)))
+                    .Select(r => r.Comment!)
+                    .ToList()
+            )).Where(g => g.Comments.Count > 0);
+        }).ToList();
+    }
+
+    private static List<OpenTextGroupDto> BuildOpenTextGroups(
+        List<Domain.Entities.SurveyQuestion> questions,
+        Domain.Entities.Survey survey,
+        bool includeCategoryPrefix = false)
+    {
+        return questions.SelectMany(q =>
+        {
+            var questionText = includeCategoryPrefix
+                ? $"[{q.Category?.Name ?? "General"}] {q.Text}"
+                : q.Text;
+            return Enum.GetValues<ReviewerType>().Select(rt => new OpenTextGroupDto(
+                rt.ToString(),
+                questionText,
+                survey.Assignments
+                    .Where(a => a.ReviewerType == rt && a.Status == AssignmentStatus.Completed)
+                    .SelectMany(a => a.Responses.Where(r => r.QuestionId == q.Id && !string.IsNullOrWhiteSpace(r.OpenText)))
+                    .Select(r => r.OpenText!)
+                    .ToList()
+            )).Where(g => g.Responses.Count > 0);
+        }).ToList();
     }
 
     private static ResultsSeriesDto BuildSeries(string name, ReviewerType type, List<Domain.Entities.SurveyQuestion> questions, Domain.Entities.Survey survey)
