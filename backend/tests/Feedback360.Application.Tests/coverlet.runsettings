@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[Feedback360.Application]*,[Feedback360.Infrastructure]*</Include>
+          <Exclude>[Feedback360.Infrastructure]*.SeedData*</Exclude>
+          <Exclude>[Feedback360.Infrastructure]*DependencyInjection*</Exclude>
+          <ExcludeByFile>**/Migrations/**</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
