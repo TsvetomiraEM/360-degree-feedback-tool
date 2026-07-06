@@ -1,4 +1,5 @@
 # Feedback360
+This project is still a work in progress!
 
 **Enterprise-style 360° feedback — surveys, peer reviews, and role-aware results in one full-stack app.**
 
