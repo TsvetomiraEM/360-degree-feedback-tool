@@ -21,7 +21,7 @@
 
 | | |
 |---|---|
-| ![Dashboard placeholder](docs/images/placeholder-dashboard.svg) | ![Templates placeholder](docs/images/placeholder-templates.svg) |
+| ![Dashboard placeholder](docs/images/dashboard.png) | ![Templates placeholder](docs/images/templates.png) |
 
 ## What I built
 
@@ -201,9 +201,6 @@ Suggested path to evaluate this project (~15 minutes):
 
 Key files: `backend/src/Feedback360.Application/Services/`, `frontend/src/routes/guards.tsx`, `backend/tests/Feedback360.Api.Tests/`.
 
-## Screenshots
-
-Placeholder wireframes live in [docs/images/](docs/images/). See [docs/images/README.md](docs/images/README.md) for capture instructions.
 
 ## License
 

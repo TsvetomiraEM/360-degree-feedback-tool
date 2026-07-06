@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { credentials, login, logout, type TestCredential } from '../helpers/auth';
+import { cleanupE2eEntities, type E2eCleanupTargets } from '../helpers/cleanup';
 import { suffix, uniqueEmail } from '../helpers/unique';
 
 async function selectMuiOption(field: Locator, optionName: string) {
@@ -82,6 +83,12 @@ async function expectAssignmentVisible(
 }
 
 test.describe.serial('Feedback360 happy path 360 journey', () => {
+  let cleanup: E2eCleanupTargets = {};
+
+  test.afterAll(async ({ request }) => {
+    await cleanupE2eEntities(request, cleanup);
+  });
+
   test('admin creates user, manager launches 360, assignees can see it', async ({ page }) => {
     test.setTimeout(90_000);
 
@@ -94,6 +101,12 @@ test.describe.serial('Feedback360 happy path 360 journey', () => {
     const peerPassword = 'Employee123!';
     const templateName = `E2E Template ${runSuffix}`;
     const surveyTitle = `${templateName} - 360 Review`;
+
+    cleanup = {
+      surveyTitle,
+      templateName,
+      userEmails: [peerEmail, employeeEmail],
+    };
 
     await login(page, credentials.admin);
     await expect(page).toHaveURL('/admin/users');
