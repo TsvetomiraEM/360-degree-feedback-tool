@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
-  <rect width="800" height="450" fill="#F5F6F7"/>
-  <rect x="0" y="0" width="800" height="56" fill="#0875E1"/>
-  <text x="24" y="36" fill="white" font-family="Segoe UI, sans-serif" font-size="20" font-weight="600">Feedback360  Templates</text>
-  <rect x="24" y="80" width="752" height="320" rx="8" fill="white" stroke="#E5E8EB"/>
-  <line x1="24" y1="120" x2="776" y2="120" stroke="#E5E8EB"/>
-  <text x="400" y="430" text-anchor="middle" fill="#6B7280" font-family="Segoe UI, sans-serif" font-size="14">Placeholder  replace with templates.png</text>
-</svg>
